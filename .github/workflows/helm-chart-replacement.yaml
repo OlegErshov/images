@@ -72,13 +72,21 @@ jobs:
           workdir="${{ github.event.inputs.workdir }}"
           chart_path="${workdir}/${tool}"
 
-          echo "[INFO] Cloning bitnami repo and checking out tag ${tool}/${version}..."
+          echo "[INFO] Sparse-cloning bitnami/${tool}@${version}..."
           rm -rf "${workdir}" && mkdir -p "${workdir}"
 
-          git clone --depth 1 "https://github.com/bitnami/charts.git" "${workdir}/tmp"
+          git init "${workdir}/tmp"
           cd "${workdir}/tmp"
-          git fetch --tags origin
+          git remote add origin https://github.com/bitnami/charts.git
+
+          # fetch only that tag, shallow
+          git fetch --depth 1 origin "refs/tags/${tool}/${version}:refs/tags/${tool}/${version}"
           git checkout "tags/${tool}/${version}"
+
+          # sparse checkout to only that chart
+          git config core.sparseCheckout true
+          echo "bitnami/${tool}" > .git/info/sparse-checkout
+          git read-tree -mu HEAD
 
           mv "bitnami/${tool}" "${chart_path}"
           cd - >/dev/null
@@ -91,6 +99,7 @@ jobs:
           fi
 
           echo "chart_path=${chart_path}" >> $GITHUB_OUTPUT
+
 
 
   retag-images:
