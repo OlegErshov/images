@@ -65,36 +65,22 @@ jobs:
 
       - id: clone
         run: |
+          mkdir -p "${{ github.event.inputs.workdir }}"
           tool=$(echo "${{ needs.setup.outputs.chart_tag }}" | cut -d/ -f1)
           version=$(echo "${{ needs.setup.outputs.chart_tag }}" | cut -d/ -f2)
-
-          workdir="${{ github.event.inputs.workdir }}"
-          chart_path="${workdir}/${tool}"
-
-          echo "[INFO] Sparse-cloning bitnami/${tool}@${version}..."
-          rm -rf "${workdir}" && mkdir -p "${workdir}"
-
-          git init "${workdir}/tmp"
-          cd "${workdir}/tmp"
-          git remote add origin https://github.com/bitnami/charts.git
-
-          # enable sparse-checkout before fetch
-          git config core.sparseCheckout true
-          echo "bitnami/${tool}" > .git/info/sparse-checkout
-
-          # fetch only the required tag
-          git fetch --depth 1 origin "refs/tags/${tool}/${version}:refs/tags/${tool}/${version}"
-          git checkout "tags/${tool}/${version}"
-
-          mv "bitnami/${tool}" "${chart_path}"
-          cd - >/dev/null
-          rm -rf "${workdir}/tmp"
-
-          if [[ ! -f "${chart_path}/values.yaml" ]]; then
-            echo "❌ ERROR: values.yaml not found in ${chart_path}"
-            ls -R "${workdir}" || true
-            exit 1
+          chart_path="${{ github.event.inputs.workdir }}/${tool}"
+          rm -rf "${chart_path}"
+          git init "${chart_path}"
+          git -C "${chart_path}" remote add origin "${{ github.event.inputs.bitnami_repo }}"
+          git -C "${chart_path}" config core.sparseCheckout true
+          echo "bitnami/${tool}" > "${chart_path}/.git/info/sparse-checkout"
+          git -C "${chart_path}" fetch --depth 1 origin "refs/tags/${{ needs.setup.outputs.chart_tag }}:refs/tags/${{ needs.setup.outputs.chart_tag }}"
+          git -C "${chart_path}" checkout "tags/${{ needs.setup.outputs.chart_tag }}"
+          if [[ -d "${chart_path}/bitnami/${tool}" ]]; then
+            mv "${chart_path}/bitnami/${tool}"/* "${chart_path}/"
+            rm -rf "${chart_path}/bitnami"
           fi
+          echo "chart_path=${chart_path}" >> $GITHUB_OUTPUT
 
 
       - name: Upload chart directory as artifact
