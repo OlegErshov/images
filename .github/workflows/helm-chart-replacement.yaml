@@ -19,11 +19,6 @@ on:
         description: "Chart tag to process (e.g. nginx/15.2.1)"
         default: "keycloak/25.2.0"
         required: true
-  push:
-    branches:
-      - feat/**
-    paths:
-      - '.github/workflows/helm-chart-replacement.yaml'
 
 env:
   IMAGE_NAMESPACE: ${{ github.event.inputs.ghcr_namespace }}
@@ -71,21 +66,29 @@ jobs:
 
       - id: clone
         run: |
-          mkdir -p "${{ github.event.inputs.workdir }}"
           tool=$(echo "${{ needs.setup.outputs.chart_tag }}" | cut -d/ -f1)
           version=$(echo "${{ needs.setup.outputs.chart_tag }}" | cut -d/ -f2)
-          chart_path="${{ github.event.inputs.workdir }}/${tool}"
-          rm -rf "${chart_path}"
-          git init "${chart_path}"
-          git -C "${chart_path}" remote add origin "${{ github.event.inputs.bitnami_repo }}"
-          git -C "${chart_path}" config core.sparseCheckout true
-          echo "bitnami/${tool}" > "${chart_path}/.git/info/sparse-checkout"
-          git -C "${chart_path}" fetch --depth 1 origin "refs/tags/${{ needs.setup.outputs.chart_tag }}:refs/tags/${{ needs.setup.outputs.chart_tag }}"
-          git -C "${chart_path}" checkout "tags/${{ needs.setup.outputs.chart_tag }}"
-          if [[ -d "${chart_path}/bitnami/${tool}" ]]; then
-            mv "${chart_path}/bitnami/${tool}"/* "${chart_path}/"
-            rm -rf "${chart_path}/bitnami"
+
+          workdir="${{ github.event.inputs.workdir }}"
+          chart_path="${workdir}/${tool}"
+
+          echo "[INFO] Cloning bitnami/${tool}@${version}..."
+          rm -rf "${workdir}" && mkdir -p "${workdir}"
+
+          git clone --depth 1 \
+            --branch "${tool}/${version}" \
+            "${{ github.event.inputs.bitnami_repo }}" \
+            "${workdir}/tmp"
+
+          mv "${workdir}/tmp/bitnami/${tool}" "${chart_path}"
+          rm -rf "${workdir}/tmp"
+
+          if [[ ! -f "${chart_path}/values.yaml" ]]; then
+            echo "❌ ERROR: values.yaml not found in ${chart_path}"
+            ls -R "${chart_path}" || true
+            exit 1
           fi
+
           echo "chart_path=${chart_path}" >> $GITHUB_OUTPUT
 
   retag-images:
