@@ -48,11 +48,19 @@ jobs:
           rm -rf linux-amd64 helm.tar.gz
           helm version
 
+      - name: Create GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: "1415820"
+          private-key: ${{ secrets.PM_PUBLISHER_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
       - name: Docker login to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${{ steps.app-token.outputs.token }}" | docker login ghcr.io -u github-app --password-stdin
 
       - name: Helm login to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${{ steps.app-token.outputs.token }}" | helm registry login ghcr.io -u github-app --password-stdin
 
   clone-chart:
     name: Clone Chart
@@ -82,7 +90,6 @@ jobs:
           fi
           echo "chart_path=${chart_path}" >> $GITHUB_OUTPUT
 
-
       - name: Upload chart directory as artifact
         uses: actions/upload-artifact@v4
         with:
@@ -105,10 +112,6 @@ jobs:
         with:
           name: chart
           path: ${{ github.event.inputs.workdir }}
-
-      - name: Docker login to GHCR
-        run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Retag & push Bitnami images
         run: |
