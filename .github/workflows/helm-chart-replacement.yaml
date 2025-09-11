@@ -72,15 +72,16 @@ jobs:
           workdir="${{ github.event.inputs.workdir }}"
           chart_path="${workdir}/${tool}"
 
-          echo "[INFO] Cloning bitnami/${tool}@${version}..."
+          echo "[INFO] Cloning bitnami repo and checking out tag ${tool}/${version}..."
           rm -rf "${workdir}" && mkdir -p "${workdir}"
 
-          git clone --depth 1 \
-            --branch "${tool}/${version}" \
-            "${{ github.event.inputs.bitnami_repo }}" \
-            "${workdir}/tmp"
+          git clone --depth 1 "https://github.com/bitnami/charts.git" "${workdir}/tmp"
+          cd "${workdir}/tmp"
+          git fetch --tags origin
+          git checkout "tags/${tool}/${version}"
 
-          mv "${workdir}/tmp/bitnami/${tool}" "${chart_path}"
+          mv "bitnami/${tool}" "${chart_path}"
+          cd - >/dev/null
           rm -rf "${workdir}/tmp"
 
           if [[ ! -f "${chart_path}/values.yaml" ]]; then
@@ -90,6 +91,7 @@ jobs:
           fi
 
           echo "chart_path=${chart_path}" >> $GITHUB_OUTPUT
+
 
   retag-images:
     name: Retag and Push Images
