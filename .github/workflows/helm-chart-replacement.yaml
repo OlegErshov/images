@@ -77,9 +77,12 @@ jobs:
           git init "${workdir}/tmp"
           cd "${workdir}/tmp"
           git remote add origin https://github.com/bitnami/charts.git
+
+          # enable sparse-checkout before fetch
           git config core.sparseCheckout true
           echo "bitnami/${tool}" > .git/info/sparse-checkout
 
+          # fetch only the required tag
           git fetch --depth 1 origin "refs/tags/${tool}/${version}:refs/tags/${tool}/${version}"
           git checkout "tags/${tool}/${version}"
 
@@ -89,8 +92,10 @@ jobs:
 
           if [[ ! -f "${chart_path}/values.yaml" ]]; then
             echo "❌ ERROR: values.yaml not found in ${chart_path}"
+            ls -R "${workdir}" || true
             exit 1
           fi
+
 
       - name: Upload chart directory as artifact
         uses: actions/upload-artifact@v4
