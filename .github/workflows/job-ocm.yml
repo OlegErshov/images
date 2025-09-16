@@ -16,7 +16,7 @@ on:
           required: false
           type: string
           description: "Path to the ocm constructor"
-          default: .ocm/component-constructor-chart-only.yml
+          default: .ocm/component-constructor-chart-only.yaml
         ocmRegistryUrl:
           type: string
           description: "OCI registry path for ocm component"
