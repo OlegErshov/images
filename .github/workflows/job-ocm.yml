@@ -86,8 +86,12 @@ jobs:
           echo "${{ secrets.GHCR_PAT }}" | helm registry login ghcr.io \
             --username github \
             --password-stdin
+
+          # Pull chart
           helm pull oci://${{ inputs.chartOCIPath }} --untar --untardir ./charts
-          chart_dir=$(ls ./charts)
+
+          # Find chart directory (strip version if present)
+          chart_dir=$(basename "${{ inputs.chartOCIPath }}" | cut -d':' -f1)
           echo "CHART_PATH=./charts/$chart_dir" >> $GITHUB_ENV
 
       - name: Prepare Template Variables
