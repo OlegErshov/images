@@ -1,24 +1,26 @@
 name: OCM
 on:
   workflow_dispatch:
-    inputs:
-      chartOCIPath:
-        required: true
-        type: string
-        description: "OCI registry path for chart in GHCR"
-      componentName:
-        required: true
-        type: string
-        description: "Component name"
-      componentConstructorFile:
-        required: false
-        type: string
-        description: "Path to the ocm constructor"
-        default: .ocm/component-constructor.yaml
-      ocmRegistryUrl:
-        type: string
-        description: "OCI registry path for ocm component"
-        default: ghcr.io/olegershov/images
+      inputs:
+        chartOCIPath:
+          required: true
+          type: string
+          description: "OCI registry path for chart in GHCR"
+          default: ghcr.io/olegershov/charts/wordpress:26.6.0
+        componentName:
+          required: true
+          type: string
+          description: "Component name"
+          default: ocm-component/wordpress
+        componentConstructorFile:
+          required: false
+          type: string
+          description: "Path to the ocm constructor"
+          default: .ocm/component-constructor.yaml
+        ocmRegistryUrl:
+          type: string
+          description: "OCI registry path for ocm component"
+          default: ghcr.io/olegershov/images
 
 jobs:
   ocm:
