@@ -87,12 +87,22 @@ jobs:
             --username github \
             --password-stdin
 
-          # Strip tag from inputs.chartOCIPath for OCM
-          chart_no_tag=$(echo "${{ inputs.chartOCIPath }}" | sed 's/:.*//')
-          helm pull oci://${{ inputs.chartOCIPath }} --untar --untardir ./charts
+          # Extract chart path and tag separately
+          chart_full="${{ inputs.chartOCIPath }}"
+          chart_no_tag=$(echo "$chart_full" | sed 's/:.*//')       # strip tag for OCM
+          chart_tag=$(echo "$chart_full" | awk -F: '{print $2}')  # extract tag
+
+          # Pull chart using full OCI reference (with tag)
+          helm pull oci://$chart_full --untar --untardir ./charts
+
+          # Get directory name of untarred chart
           chart_dir=$(basename "$chart_no_tag")
+
+          # Export environment variables for later steps
           echo "CHART_PATH=./charts/$chart_dir" >> $GITHUB_ENV
           echo "CHART_OCI_PATH=oci://$chart_no_tag" >> $GITHUB_ENV
+          echo "CHART_VERSION=$chart_tag" >> $GITHUB_ENV
+
 
 
       - name: Prepare Template Variables
