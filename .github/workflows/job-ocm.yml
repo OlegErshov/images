@@ -11,7 +11,7 @@ on:
         required: true
         type: string
         description: "Component name"
-        default: ocm-component/wordpress
+        default: component/wordpress
       componentConstructorFile:
         required: false
         type: string
