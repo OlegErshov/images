@@ -6,7 +6,7 @@ on:
           required: true
           type: string
           description: "OCI registry path for chart in GHCR"
-          default: ghcr.io/olegershov/charts/wordpress:26.6.0
+          default: ghcr.io/olegershov/images/charts/wordpress:26.0.0
         componentName:
           required: true
           type: string
@@ -16,7 +16,7 @@ on:
           required: false
           type: string
           description: "Path to the ocm constructor"
-          default: .ocm/component-constructor.yaml
+          default: .ocm/component-constructor-chart-only.yml
         ocmRegistryUrl:
           type: string
           description: "OCI registry path for ocm component"
