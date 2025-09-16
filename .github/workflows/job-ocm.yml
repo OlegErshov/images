@@ -24,13 +24,6 @@ jobs:
   ocm:
     runs-on: ubuntu-latest
     steps:
-      - name: Create Github App Token
-        uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b # v2
-        id: app-token
-        with:
-          app-id: "1415820"
-          private-key: ${{ secrets.PM_PUBLISHER_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
       - name: Setup yq@latest
         run: |
           if ! command -v yq &>/dev/null
@@ -39,11 +32,13 @@ jobs:
             wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /home/runner/.local/bin/yq &&\
               chmod +x /home/runner/.local/bin/yq
           fi
+
       - name: Check out the repo
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
-      - name: setup OCM CLI
+        uses: actions/checkout@v4
+
+      - name: Setup OCM CLI
         run: |
-          REPO=${repo:=open-component-model/ocm}
+          REPO=open-component-model/ocm
           if [ -z "$version" -o "$version" == latest ]; then
             version="$(basename "$(curl -Ls -o /dev/null -w %{url_effective} https://github.com/$REPO/releases/latest)")"
             echo "Selecting latest version: $version"
@@ -55,6 +50,7 @@ jobs:
           curl -LsS -o ocm-cli.tgz "$URL"
           tar --overwrite -xvzf ocm-cli.tgz >/dev/null
           chmod a+x ocm
+
       - name: Write Credentials file
         run: |
           cat <<EOF > $HOME/.ocmconfig
