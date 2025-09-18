@@ -140,8 +140,7 @@ jobs:
 
             docker buildx imagetools create \
               --tag "$target" \
-              --append "${legacy_img}@$(docker buildx imagetools inspect ${legacy_img} --raw | jq -r '.manifests[] | select(.platform.architecture=="amd64" and .platform.os=="linux") | .digest')" \
-              --append "${legacy_img}@$(docker buildx imagetools inspect ${legacy_img} --raw | jq -r '.manifests[] | select(.platform.architecture=="arm64" and .platform.os=="linux") | .digest')"
+              "$legacy_img"
 
             yq eval --inplace "
               (.. | select(has(\"image\") and .image.repository == \"${repo}\") | .image.registry) = \"${{ env.GHCR_NAMESPACE }}\" |
